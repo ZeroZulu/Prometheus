@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prometheus - Advanced Web Scraper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            font-weight: 300;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .main-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e0e0e0;
+            margin-bottom: 30px;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+        
+        .tab:hover {
+            color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+        }
+        
+        .form-col {
+            flex: 1;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+        
+        .btn-secondary:hover {
+            box-shadow: 0 6px 20px rgba(245, 87, 108, 0.6);
+        }
+        
+        .selector-builder {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .selector-preview {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin-top: 15px;
+            min-height: 40px;
+        }
+        
+        .results-area {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            min-height: 200px;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #2d3748;
+            color: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #48bb78;
+            margin-right: 10px;
+        }
+        
+        .progress-bar {
+            width: 200px;
+            height: 6px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #48bb78;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .data-table th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        .data-table tr:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .schedule-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .schedule-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .proxy-list {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 10px;
+        }
+        
+        .proxy-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .feature-icon {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔥 PROMETHEUS</h1>
+            <p>Advanced Web Scraping Platform</p>
+        </div>
+        
+        <div class="main-panel">
+            <div class="status-bar">
+                <div style="display: flex; align-items: center;">
+                    <div class="status-indicator"></div>
+                    <span id="status-text">Ready</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress"></div>
+                </div>
+                <span id="scraped-count">0 items scraped</span>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('scraper')">🎯 Scraper</button>
+                <button class="tab" onclick="switchTab('selectors')">🔍 Selectors</button>
+                <button class="tab" onclick="switchTab('schedule')">⏰ Schedule</button>
+                <button class="tab" onclick="switchTab('proxies')">🌐 Proxies</button>
+                <button class="tab" onclick="switchTab('export')">📊 Export</button>
+            </div>
+            
+            <!-- Scraper Tab -->
+            <div id="scraper-tab" class="tab-content active">
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="target-url">Target URL</label>
+                        <input type="url" id="target-url" placeholder="https://example.com">
+                    </div>
+                    <div class="form-col" style="flex: 0 0 200px;">
+                        <label for="scrape-method">Method</label>
+                        <select id="scrape-method">
+                            <option value="dom">DOM Parsing</option>
+                            <option value="screenshot">Screenshot</option>
+                            <option value="headless">Headless Browser</option>
+                            <option value="api">API Mode</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="css-selector">CSS Selector</label>
+                        <input type="text" id="css-selector" placeholder="div.content, h2.title, .price">
+                    </div>
+                    <div class="form-col" style="flex: 0 0 150px;">
+                        <label for="delay">Delay (ms)</label>
+                        <input type="number" id="delay" value="1000" min="0">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="custom-headers">Custom Headers (JSON)</label>
+                    <textarea id="custom-headers" rows="3" placeholder='{"User-Agent": "Custom Bot", "Authorization": "Bearer token"}'></textarea>
+                </div>
+                
+                <div class="form-row">
+                    <button class="btn" onclick="startScraping()">🚀 Start Scraping</button>
+                    <button class="btn btn-secondary" onclick="previewScrape()">👁️ Preview</button>
+                    <button class="btn" onclick="stopScraping()" style="background: #e53e3e;">⏹️ Stop</button>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Scraping in progress...</p>
+                </div>
+                
+                <div class="results-area" id="results">
+                    <h3>Results will appear here</h3>
+                    <div class="feature-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <h4>High Performance</h4>
+                            <p>Multi-threaded scraping with intelligent rate limiting</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🛡️</div>
+                            <h4>Anti-Detection</h4>
+                            <p>Rotating user agents, proxies, and human-like behavior</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🎨</div>
+                            <h4>Visual Selector</h4>
+                            <p>Point-and-click element selection with CSS generation</p>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">📊</div>
+                            <h4>Data Export</h4>
+                            <p>Export to CSV, JSON, XML, Excel, and databases</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Selectors Tab -->
+            <div id="selectors-tab" class="tab-content">
+                <div class="selector-builder">
+                    <h3>Visual Selector Builder</h3>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label>Element Type</label>
+                            <select id="element-type">
+                                <option value="text">Text Content</option>
+                                <option value="link">Links</option>
+                                <option value="image">Images</option>
+                                <option value="table">Tables</option>
+                                <option value="form">Forms</option>
+                            </select>
+                        </div>
+                        <div class="form-col">
+                            <label>Attribute</label>
+                            <select id="attribute">
+                                <option value="text">Text</option>
+                                <option value="href">href</option>
+                                <option value="src">src</option>
+                                <option value="alt">alt</option>
+                                <option value="title">title</option>
+                                <option value="data-*">data-*</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label>Class Name</label>
+                            <input type="text" id="class-name" placeholder="content, title, price">
+                        </div>
+                        <div class="form-col">
+                            <label>ID</label>
+                            <input type="text" id="element-id" placeholder="main-content">
+                        </div>
+                    </div>
+                    
+                    <button class="btn" onclick="generateSelector()">Generate Selector</button>
+                    
+                    <div class="selector-preview" id="selector-preview">
+                        Generated CSS selector will appear here...
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Saved Selectors</label>
+                    <div id="saved-selectors">
+                        <div class="schedule-item">
+                            <h4>Product Prices</h4>
+                            <code>.price, .cost, [data-price]</code>
+                            <button class="btn" style="margin-left: 10px; padding: 5px 15px;">Use</button>
+                        </div>
+                        <div class="schedule-item">
+                            <h4>Article Titles</h4>
+                            <code>h1, h2.title, .article-title</code>
+                            <button class="btn" style="margin-left: 10px; padding: 5px 15px;">Use</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Schedule Tab -->
+            <div id="schedule-tab" class="tab-content">
+                <div class="form-row">
+                    <div class="form-col">
+                        <label>Schedule Name</label>
+                        <input type="text" id="schedule-name" placeholder="Daily Price Check">
+                    </div>
+                    <div class="form-col">
+                        <label>Frequency</label>
+                        <select id="frequency">
+                            <option value="once">Run Once</option>
+                            <option value="hourly">Every Hour</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label>Start Time</label>
+                        <input type="datetime-local" id="start-time">
+                    </div>
+                    <div class="form-col">
+                        <label>Notifications</label>
+                        <select id="notifications">
+                            <option value="none">None</option>
+                            <option value="email">Email</option>
+                            <option value="webhook">Webhook</option>
+                            <option value="both">Both</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="btn" onclick="createSchedule()">Create Schedule</button>
+                
+                <h3 style="margin-top: 30px;">Active Schedules</h3>
+                <div id="active-schedules">
+                    <div class="schedule-item">
+                        <h4>Daily Price Monitor</h4>
+                        <p><strong>URL:</strong> https://example-store.com/products</p>
+                        <p><strong>Frequency:</strong> Every 24 hours</p>
+                        <p><strong>Next Run:</strong> Tomorrow at 9:00 AM</p>
+                        <p><strong>Status:</strong> <span style="color: #48bb78;">Active</span></p>
+                        <button class="btn btn-secondary" style="padding: 5px 15px; margin-top: 10px;">Edit</button>
+                    </div>
+                    
+                    <div class="schedule-item">
+                        <h4>Stock Availability Check</h4>
+                        <p><strong>URL:</strong> https://inventory.example.com</p>
+                        <p><strong>Frequency:</strong> Every 2 hours</p>
+                        <p><strong>Next Run:</strong> In 47 minutes</p>
+                        <p><strong>Status:</strong> <span style="color: #48bb78;">Active</span></p>
+                        <button class="btn btn-secondary" style="padding: 5px 15px; margin-top: 10px;">Edit</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Proxies Tab -->
+            <div id="proxies-tab" class="tab-content">
+                <div class="form-row">
+                    <div class="form-col">
+                        <label>Proxy Server</label>
+                        <input type="text" id="proxy-server" placeholder="proxy.example.com:8080">
+                    </div>
+                    <div class="form-col">
+                        <label>Type</label>
+                        <select id="proxy-type">
+                            <option value="http">HTTP</option>
+                            <option value="https">HTTPS</option>
+                            <option value="socks4">SOCKS4</option>
+                            <option value="socks5">SOCKS5</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-col">
+                        <label>Username (Optional)</label>
+                        <input type="text" id="proxy-username">
+                    </div>
+                    <div class="form-col">
+                        <label>Password (Optional)</label>
+                        <input type="password" id="proxy-password">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <button class="btn" onclick="addProxy()">Add Proxy</button>
+                    <button class="btn btn-secondary" onclick="testProxies()">Test All</button>
+                    <button class="btn" onclick="importProxies()">Import List</button>
+                </div>
+                
+                <h3 style="margin-top: 30px;">Proxy Pool</h3>
+                <div class="proxy-list" id="proxy-list">
+                    <div class="proxy-item">
+                        <span>📡 proxy1.example.com:8080 (HTTP)</span>
+                        <span style="color: #48bb78;">✅ Active - 234ms</span>
+                    </div>
+                    <div class="proxy-item">
+                        <span>📡 proxy2.example.com:3128 (HTTPS)</span>
+                        <span style="color: #48bb78;">✅ Active - 187ms</span>
+                    </div>
+                    <div class="proxy-item">
+                        <span>📡 socks.example.com:1080 (SOCKS5)</span>
+                        <span style="color: #e53e3e;">❌ Failed - Timeout</span>
+                    </div>
+                    <div class="proxy-item">
+                        <span>📡 fast-proxy.net:8888 (HTTP)</span>
+                        <span style="color: #48bb78;">✅ Active - 95ms</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Export Tab -->
+            <div id="export-tab" class="tab-content">
+                <div class="form-row">
+                    <div class="form-col">
+                        <label>Export Format</label>
+                        <select id="export-format">
+                            <option value="csv">CSV</option>
+                            <option value="json">JSON</option>
+                            <option value="xml">XML</option>
+                            <option value="excel">Excel (XLSX)</option>
+                            <option value="google-sheets">Google Sheets</option>
+                            <option value="database">Database</option>
+                        </select>
+                    </div>
+                    <div class="form-col">
+                        <label>File Name</label>
+                        <input type="text" id="export-filename" placeholder="scraped_data">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="include-metadata"> Include metadata (timestamps, URLs, etc.)
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label>Database Connection (if Database selected)</label>
+                    <input type="text" id="db-connection" placeholder="postgresql://user:pass@localhost:5432/db">
+                </div>
+                
+                <div class="form-row">
+                    <button class="btn" onclick="exportData()">📊 Export Data</button>
+                    <button class="btn btn-secondary" onclick="previewExport()">👁️ Preview</button>
+                    <button class="btn" onclick="scheduleExport()">⏰ Schedule Export</button>
+                </div>
+                
+                <div style="margin-top: 30px;">
+                    <h3>Export History</h3>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>File Name</th>
+                                <th>Format</th>
+                                <th>Size</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>product_prices_2025_06_12.csv</td>
+                                <td>CSV</td>
+                                <td>2.4 MB</td>
+                                <td>2025-06-12 14:30</td>
+                                <td><button class="btn" style="padding: 5px 15px;">Download</button></td>
+                            </tr>
+                            <tr>
+                                <td>competitor_analysis.json</td>
+                                <td>JSON</td>
+                                <td>876 KB</td>
+                                <td>2025-06-11 09:15</td>
+                                <td><button class="btn" style="padding: 5px 15px;">Download</button></td>
+                            </tr>
+                            <tr>
+                                <td>stock_data.xlsx</td>
+                                <td>Excel</td>
+                                <td>1.8 MB</td>
+                                <td>2025-06-10 16:45</td>
+                                <td><button class="btn" style="padding: 5px 15px;">Download</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isScrapingActive = false;
+        let scrapedCount = 0;
+        let currentProgress = 0;
+
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab content
+            document.getElementById(tabName + '-tab').classList.add('active');
+            
+            // Add active class to selected tab
+            event.target.classList.add('active');
+        }
+
+        function updateStatus(status, progress = null) {
+            document.getElementById('status-text').textContent = status;
+            if (progress !== null) {
+                document.getElementById('progress').style.width = progress + '%';
+                currentProgress = progress;
+            }
+        }
+
+        function updateScrapedCount(count) {
+            scrapedCount = count;
+            document.getElementById('scraped-count').textContent = count + ' items scraped';
+        }
+
+        function startScraping() {
+            const url = document.getElementById('target-url').value;
+            const selector = document.getElementById('css-selector').value;
+            const method = document.getElementById('scrape-method').value;
+            const delay = document.getElementById('delay').value;
+
+            if (!url) {
+                alert('Please enter a target URL');
+                return;
+            }
+
+            isScrapingActive = true;
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '<h3>Scraping in progress...</h3>';
+            
+            updateStatus('Initializing scraper...', 0);
+            
+            // Simulate scraping process
+            simulateScraping();
+        }
+
+        function simulateScraping() {
+            let progress = 0;
+            let count = 0;
+            
+            const interval = setInterval(() => {
+                if (!isScrapingActive) {
+                    clearInterval(interval);
+                    return;
+                }
+                
+                progress += Math.random() * 15;
+                count += Math.floor(Math.random() * 5) + 1;
+                
+                if (progress >= 100) {
+                    progress = 100;
+                    updateStatus('Scraping completed!', progress);
+                    updateScrapedCount(count);
+                    displayResults(count);
+                    document.getElementById('loading').style.display = 'none';
+                    isScrapingActive = false;
+                    clearInterval(interval);
+                } else {
+                    updateStatus('Scraping data...', progress);
+                    updateScrapedCount(count);
+                }
+            }, 500);
+        }
+
+        function displayResults(count) {
+            const resultsHTML = `
+                <h3>Scraping Results (${count} items found)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>URL</th>
+                            <th>Content</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${generateSampleData(Math.min(count, 10))}
+                    </tbody>
+                </table>
+                <p style="margin-top: 15px; color: #666;">
+                    Showing first 10 results. Export all ${count} items using the Export tab.
+                </p>
+            `;
+            
+            document.getElementById('results').innerHTML = resultsHTML;
+        }
+
+        function generateSampleData(count) {
+            const sampleTitles = [
+                'Premium Product A', 'Best Deal B', 'Limited Offer C', 'New Release D',
+                'Popular Item E', 'Trending F', 'Hot Sale G', 'Featured H', 'Top Rated I', 'Special J'
+            ];
+            
+            let html = '';
+            for (let i = 0; i < count; i++) {
+                html += `
+                    <tr>
+                        <td>${sampleTitles[i % sampleTitles.length]}</td>
+                        <td>https://example.com/item${i + 1}</td>
+                        <td>Sample content text for item ${i + 1}</td>
+                        <td>${new Date().toLocaleString()}</td>
+                    </tr>
+                `;
+            }
+            return html;
+        }
+
+        function stopScraping() {
+            isScrapingActive = false;
+            document.getElementById('loading').style.display = 'none';
+            updateStatus('Scraping stopped by user', currentProgress);
+        }
+
+        async function previewScrape() {
+            const url = document.getElementById('target-url').value;
+            if (!url) {
+                alert('Please enter a target URL');
+                return;
+            }
+            
+            updateStatus('Fetching page content...', 10);
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                // Create a proxy URL to bypass CORS (this is a limitation in browser environments)
+                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+                
+                updateStatus('Analyzing page structure...', 30);
+                
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                
+                if (!data.contents) {
+                    throw new Error('Failed to fetch page content');
+                }
+                
+                updateStatus('Parsing HTML elements...', 60);
+                
+                // Create a temporary DOM to parse the fetched content
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(data.contents, 'text/html');
+                
+                // Analyze the page content
+                const analysis = analyzePageContent(doc, url);
+                
+                updateStatus('Generating preview...', 90);
+                
+                setTimeout(() => {
+                    const previewHTML = `
+                        <h3>Preview Results for ${new URL(url).hostname}</h3>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                            <strong>Target URL:</strong> ${url}<br>
+                            <strong>Page Title:</strong> ${analysis.title}<br>
+                            <strong>Total Elements:</strong> ${analysis.totalElements}<br>
+                            <strong>Scrapable Elements:</strong> ${analysis.scrapableElements}<br>
+                            <strong>Estimated Time:</strong> ${analysis.estimatedTime}<br>
+                            <strong>Success Rate:</strong> ${analysis.successRate}%
+                        </div>
+                        <h4>Elements Found:</h4>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Element Type</th>
+                                    <th>Recommended Selector</th>
+                                    <th>Count</th>
+                                    <th>Sample Content</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${analysis.elements.map(element => `
+                                    <tr>
+                                        <td>${element.type}</td>
+                                        <td><code>${element.selector}</code></td>
+                                        <td>${element.count}</td>
+                                        <td>${element.sample}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        ${analysis.recommendations ? `
+                            <div style="background: #e6f3ff; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                                <h4>💡 Recommendations:</h4>
+                                <ul>
+                                    ${analysis.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                                </ul>
+                            </div>
+                        ` : ''}
+                    `;
+                    
+                    document.getElementById('results').innerHTML = previewHTML;
+                    document.getElementById('loading').style.display = 'none';
+                    updateStatus('Preview completed', 100);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Preview error:', error);
+                document.getElementById('loading').style.display = 'none';
+                
+                // Fallback to intelligent mock data based on URL
+                const mockAnalysis = generateIntelligentMockData(url);
+                
+                const previewHTML = `
+                    <h3>Preview Results for ${new URL(url).hostname}</h3>
+                    <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #ffc107;">
+                        <strong>⚠️ Note:</strong> Direct page analysis blocked by CORS policy. Showing intelligent predictions based on site structure.<br><br>
+                        <strong>Target URL:</strong> ${url}<br>
+                        <strong>Site Type:</strong> ${mockAnalysis.siteType}<br>
+                        <strong>Predicted Elements:</strong> ${mockAnalysis.scrapableElements}<br>
+                        <strong>Estimated Time:</strong> ${mockAnalysis.estimatedTime}<br>
+                        <strong>Confidence:</strong> ${mockAnalysis.confidence}%
+                    </div>
+                    <h4>Predicted Elements (Based on Site Pattern):</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Element Type</th>
+                                <th>Likely Selector</th>
+                                <th>Est. Count</th>
+                                <th>Expected Content</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${mockAnalysis.elements.map(element => `
+                                <tr>
+                                    <td>${element.type}</td>
+                                    <td><code>${element.selector}</code></td>
+                                    <td>${element.count}</td>
+                                    <td>${element.sample}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                    <div style="background: #e6f3ff; padding: 15px; border-radius: 8px; margin-top: 15px;">
+                        <h4>💡 Site-Specific Tips:</h4>
+                        <ul>
+                            ${mockAnalysis.tips.map(tip => `<li>${tip}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                
+                document.getElementById('results').innerHTML = previewHTML;
+                updateStatus('Preview generated (predictive mode)', 100);
+            }
+        }
+        
+        function analyzePageContent(doc, url) {
+            const title = doc.title || 'No title found';
+            const allElements = doc.querySelectorAll('*').length;
+            
+            // Analyze different types of elements
+            const headings = doc.querySelectorAll('h1, h2, h3, h4, h5, h6');
+            const links = doc.querySelectorAll('a[href]');
+            const images = doc.querySelectorAll('img[src]');
+            const paragraphs = doc.querySelectorAll('p');
+            const divs = doc.querySelectorAll('div');
+            const spans = doc.querySelectorAll('span');
+            
+            // Try to identify common e-commerce patterns
+            const priceElements = doc.querySelectorAll('[class*="price"], [class*="cost"], [data-price], .price, .cost');
+            const productElements = doc.querySelectorAll('[class*="product"], [class*="item"], .product, .item');
+            
+            const elements = [];
+            
+            if (headings.length > 0) {
+                elements.push({
+                    type: 'Headings',
+                    selector: 'h1, h2, h3, h4, h5, h6',
+                    count: headings.length,
+                    sample: Array.from(headings).slice(0, 3).map(h => `"${h.textContent.trim().substring(0, 30)}..."`).join(', ')
+                });
+            }
+            
+            if (links.length > 0) {
+                elements.push({
+                    type: 'Links',
+                    selector: 'a[href]',
+                    count: links.length,
+                    sample: Array.from(links).slice(0, 3).map(a => `"${a.textContent.trim().substring(0, 30)}..."`).join(', ')
+                });
+            }
+            
+            if (images.length > 0) {
+                elements.push({
+                    type: 'Images',
+                    selector: 'img[src]',
+                    count: images.length,
+                    sample: Array.from(images).slice(0, 3).map(img => `"${img.alt || img.src.split('/').pop()}"`).join(', ')
+                });
+            }
+            
+            if (priceElements.length > 0) {
+                elements.push({
+                    type: 'Price Elements',
+                    selector: '[class*="price"], [class*="cost"], [data-price]',
+                    count: priceElements.length,
+                    sample: Array.from(priceElements).slice(0, 3).map(p => `"${p.textContent.trim()}"`).join(', ')
+                });
+            }
+            
+            if (productElements.length > 0) {
+                elements.push({
+                    type: 'Product Elements',
+                    selector: '[class*="product"], [class*="item"]',
+                    count: productElements.length,
+                    sample: 'Product containers and listings'
+                });
+            }
+            
+            // Generate recommendations
+            const recommendations = [];
+            const hostname = new URL(url).hostname.toLowerCase();
+            
+            if (hostname.includes('amazon')) {
+                recommendations.push('Use slower delays (2-3 seconds) to avoid rate limiting');
+                recommendations.push('Focus on product titles: [data-component-type="s-search-result"] h3');
+                recommendations.push('Prices: .a-price .a-offscreen');
+            } else if (hostname.includes('ebay')) {
+                recommendations.push('Product titles: .s-item__title');
+                recommendations.push('Prices: .s-item__price');
+                recommendations.push('eBay allows moderate scraping speeds');
+            }
+            
+            if (priceElements.length > 10) {
+                recommendations.push('This appears to be an e-commerce site - consider scraping product data');
+            }
+            
+            if (links.length > 100) {
+                recommendations.push('High link count detected - consider pagination handling');
+            }
+            
+            return {
+                title,
+                totalElements: allElements,
+                scrapableElements: elements.reduce((sum, el) => sum + el.count, 0),
+                estimatedTime: Math.ceil(elements.reduce((sum, el) => sum + el.count, 0) / 20) + ' seconds',
+                successRate: Math.min(95, 70 + Math.random() * 25),
+                elements,
+                recommendations: recommendations.length > 0 ? recommendations : null
+            };
+        }
+        
+        function generateIntelligentMockData(url) {
+            const hostname = new URL(url).hostname.toLowerCase();
+            let siteType = 'General Website';
+            let elements = [];
+            let tips = [];
+            let confidence = 85;
+            
+            if (hostname.includes('amazon')) {
+                siteType = 'E-commerce (Amazon)';
+                confidence = 95;
+                elements = [
+                    { type: 'Product Titles', selector: '[data-component-type="s-search-result"] h3 a span', count: '16-48', sample: 'Product names, electronics, books...' },
+                    { type: 'Prices', selector: '.a-price .a-offscreen', count: '16-48', sample: '$19.99, $129.00, $2,499.99...' },
+                    { type: 'Ratings', selector: '.a-icon-alt', count: '16-48', sample: '4.5 out of 5 stars, 4.2 out of 5 stars...' },
+                    { type: 'Product Images', selector: '.s-image', count: '16-48', sample: 'Product thumbnails and photos' },
+                    { type: 'Product Links', selector: '[data-component-type="s-search-result"] h3 a', count: '16-48', sample: 'Links to product detail pages' }
+                ];
+                tips = [
+                    'Use delays of 2-3 seconds between requests to avoid rate limiting',
+                    'Amazon frequently changes CSS classes - test selectors regularly',
+                    'Consider using data-* attributes as they\'re more stable',
+                    'Be aware of geo-location specific content',
+                    'Respect robots.txt and Terms of Service'
+                ];
+            } else if (hostname.includes('ebay')) {
+                siteType = 'E-commerce (eBay)';
+                confidence = 90;
+                elements = [
+                    { type: 'Item Titles', selector: '.s-item__title', count: '25-50', sample: 'Auction items, Buy It Now listings...' },
+                    { type: 'Prices', selector: '.s-item__price', count: '25-50', sample: '$9.99, $45.00, $199.99...' },
+                    { type: 'Shipping Info', selector: '.s-item__shipping', count: '20-45', sample: 'Free shipping, +$3.99 shipping...' },
+                    { type: 'Item Images', selector: '.s-item__image img', count: '25-50', sample: 'Product photos and thumbnails' },
+                    { type: 'Seller Info', selector: '.s-item__seller-info-text', count: '25-50', sample: 'Seller names and ratings' }
+                ];
+                tips = [
+                    'eBay is generally more scraping-friendly than Amazon',
+                    'Use 1-2 second delays for respectful scraping',
+                    'Watch for auction vs Buy It Now price formats',
+                    'Consider scraping sold listings for market analysis',
+                    'Check for international shipping restrictions'
+                ];
+            } else if (hostname.includes('reddit')) {
+                siteType = 'Social Media (Reddit)';
+                confidence = 88;
+                elements = [
+                    { type: 'Post Titles', selector: '[data-click-id="body"] h3', count: '25', sample: 'Discussion topics, news headlines...' },
+                    { type: 'Post Content', selector: '[data-click-id="text"]', count: '10-25', sample: 'Text posts and comments...' },
+                    { type: 'Vote Scores', selector: '[id^="vote-arrows"] .score', count: '25', sample: 'Upvote counts: 1.2k, 45, 892...' },
+                    { type: 'Authors', selector: '[data-click-id="user"]', count: '25', sample: 'Usernames: u/example, u/user123...' },
+                    { type: 'Subreddits', selector: '[data-click-id="subreddit"]', count: '1-25', sample: 'r/technology, r/worldnews...' }
+                ];
+                tips = [
+                    'Reddit has rate limiting - use 3+ second delays',
+                    'Consider using Reddit\'s API instead of scraping',
+                    'Subreddit structure varies significantly',
+                    'Be aware of dynamic loading and infinite scroll',
+                    'Respect community guidelines and Reddit ToS'
+                ];
+            } else {
+                // Generic website analysis
+                elements = [
+                    { type: 'Headings', selector: 'h1, h2, h3', count: '5-20', sample: 'Page titles and section headers...' },
+                    { type: 'Paragraphs', selector: 'p', count: '10-50', sample: 'Text content and descriptions...' },
+                    { type: 'Links', selector: 'a[href]', count: '20-100', sample: 'Navigation and content links...' },
+                    { type: 'Images', selector: 'img[src]', count: '5-30', sample: 'Photos, logos, and graphics...' }
+                ];
+                tips = [
+                    'Start with a 1-2 second delay between requests',
+                    'Inspect the page structure to identify key elements',
+                    'Look for consistent CSS classes and IDs',
+                    'Test selectors on multiple pages to ensure consistency'
+                ];
+            }
+            
+            return {
+                siteType,
+                scrapableElements: elements.length * 15 + Math.floor(Math.random() * 20),
+                estimatedTime: Math.ceil(elements.length * 2.5) + ' seconds',
+                confidence,
+                elements,
+                tips
+            };
+        }
+
+        function generateSelector() {
+            const elementType = document.getElementById('element-type').value;
+            const attribute = document.getElementById('attribute').value;
+            const className = document.getElementById('class-name').value;
+            const elementId = document.getElementById('element-id').value;
+
+            let selector = '';
+            
+            // Base element selector
+            switch(elementType) {
+                case 'text':
+                    selector = 'p, span, div';
+                    break;
+                case 'link':
+                    selector = 'a';
+                    break;
+                case 'image':
+                    selector = 'img';
+                    break;
+                case 'table':
+                    selector = 'table, tr, td';
+                    break;
+                case 'form':
+                    selector = 'form, input, select, textarea';
+                    break;
+            }
+
+            // Add class selector
+            if (className) {
+                const classes = className.split(',').map(c => c.trim());
+                selector = classes.map(cls => selector.split(',').map(s => s.trim() + '.' + cls).join(', ')).join(', ');
+            }
+
+            // Add ID selector
+            if (elementId) {
+                selector += selector ? ', ' : '';
+                selector += '#' + elementId;
+            }
+
+            // Add attribute selector
+            if (attribute && attribute !== 'text') {
+                selector += `[${attribute}]`;
+            }
+
+            document.getElementById('selector-preview').textContent = selector || 'Enter parameters to generate selector';
+            document.getElementById('css-selector').value = selector;
+        }
+
+        function createSchedule() {
+            const name = document.getElementById('schedule-name').value;
+            const frequency = document.getElementById('frequency').value;
+            const startTime = document.getElementById('start-time').value;
+            const notifications = document.getElementById('notifications').value;
+
+            if (!name || !startTime) {
+                alert('Please enter schedule name and start time');
+                return;
+            }
+
+            const scheduleItem = document.createElement('div');
+            scheduleItem.className = 'schedule-item';
+            scheduleItem.innerHTML = `
+                <h4>${name}</h4>
+                <p><strong>URL:</strong> ${document.getElementById('target-url').value || 'Not specified'}</p>
+                <p><strong>Frequency:</strong> ${frequency}</p>
+                <p><strong>Start Time:</strong> ${new Date(startTime).toLocaleString()}</p>
+                <p><strong>Notifications:</strong> ${notifications}</p>
+                <p><strong>Status:</strong> <span style="color: #48bb78;">Scheduled</span></p>
+                <button class="btn btn-secondary" style="padding: 5px 15px; margin-top: 10px;" onclick="editSchedule(this)">Edit</button>
+                <button class="btn" style="padding: 5px 15px; margin-top: 10px; background: #e53e3e;" onclick="deleteSchedule(this)">Delete</button>
+            `;
+
+            document.getElementById('active-schedules').appendChild(scheduleItem);
+            
+            // Clear form
+            document.getElementById('schedule-name').value = '';
+            document.getElementById('start-time').value = '';
+            
+            alert('Schedule created successfully!');
+        }
+
+        function editSchedule(button) {
+            const scheduleItem = button.closest('.schedule-item');
+            const name = scheduleItem.querySelector('h4').textContent;
+            
+            document.getElementById('schedule-name').value = name;
+            switchTab('schedule');
+        }
+
+        function deleteSchedule(button) {
+            if (confirm('Are you sure you want to delete this schedule?')) {
+                button.closest('.schedule-item').remove();
+            }
+        }
+
+        function addProxy() {
+            const server = document.getElementById('proxy-server').value;
+            const type = document.getElementById('proxy-type').value;
+            const username = document.getElementById('proxy-username').value;
+            const password = document.getElementById('proxy-password').value;
+
+            if (!server) {
+                alert('Please enter proxy server address');
+                return;
+            }
+
+            const proxyItem = document.createElement('div');
+            proxyItem.className = 'proxy-item';
+            proxyItem.innerHTML = `
+                <span>📡 ${server} (${type.toUpperCase()})</span>
+                <span style="color: #f6ad55;">⏳ Testing...</span>
+            `;
+
+            document.getElementById('proxy-list').appendChild(proxyItem);
+
+            // Clear form
+            document.getElementById('proxy-server').value = '';
+            document.getElementById('proxy-username').value = '';
+            document.getElementById('proxy-password').value = '';
+
+            // Simulate proxy test
+            setTimeout(() => {
+                const status = Math.random() > 0.3 ? 
+                    '<span style="color: #48bb78;">✅ Active - ' + Math.floor(Math.random() * 300 + 50) + 'ms</span>' :
+                    '<span style="color: #e53e3e;">❌ Failed - Timeout</span>';
+                proxyItem.querySelector('span:last-child').innerHTML = status;
+            }, 2000);
+        }
+
+        function testProxies() {
+            const proxyItems = document.querySelectorAll('.proxy-item');
+            proxyItems.forEach(item => {
+                const statusSpan = item.querySelector('span:last-child');
+                statusSpan.innerHTML = '<span style="color: #f6ad55;">⏳ Testing...</span>';
+                
+                setTimeout(() => {
+                    const status = Math.random() > 0.2 ? 
+                        '<span style="color: #48bb78;">✅ Active - ' + Math.floor(Math.random() * 300 + 50) + 'ms</span>' :
+                        '<span style="color: #e53e3e;">❌ Failed - Timeout</span>';
+                    statusSpan.innerHTML = status;
+                }, Math.random() * 3000 + 1000);
+            });
+        }
+
+        function importProxies() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.txt,.csv';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const content = e.target.result;
+                        const proxies = content.split('\n').filter(line => line.trim());
+                        
+                        proxies.forEach(proxy => {
+                            if (proxy.trim()) {
+                                const proxyItem = document.createElement('div');
+                                proxyItem.className = 'proxy-item';
+                                proxyItem.innerHTML = `
+                                    <span>📡 ${proxy.trim()} (HTTP)</span>
+                                    <span style="color: #f6ad55;">⏳ Testing...</span>
+                                `;
+                                document.getElementById('proxy-list').appendChild(proxyItem);
+                                
+                                // Simulate test
+                                setTimeout(() => {
+                                    const status = Math.random() > 0.4 ? 
+                                        '<span style="color: #48bb78;">✅ Active - ' + Math.floor(Math.random() * 300 + 50) + 'ms</span>' :
+                                        '<span style="color: #e53e3e;">❌ Failed - Connection refused</span>';
+                                    proxyItem.querySelector('span:last-child').innerHTML = status;
+                                }, Math.random() * 5000 + 1000);
+                            }
+                        });
+                        
+                        alert(`Imported ${proxies.length} proxies. Testing in progress...`);
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function exportData() {
+            const format = document.getElementById('export-format').value;
+            const filename = document.getElementById('export-filename').value || 'scraped_data';
+            const includeMetadata = document.getElementById('include-metadata').checked;
+
+            if (scrapedCount === 0) {
+                alert('No data to export. Please run a scraping job first.');
+                return;
+            }
+
+            updateStatus('Preparing export...', 0);
+
+            // Simulate export process
+            let progress = 0;
+            const exportInterval = setInterval(() => {
+                progress += Math.random() * 20 + 10;
+                
+                if (progress >= 100) {
+                    progress = 100;
+                    updateStatus('Export completed!', progress);
+                    
+                    // Add to export history
+                    const exportTable = document.querySelector('#export-tab .data-table tbody');
+                    const newRow = document.createElement('tr');
+                    newRow.innerHTML = `
+                        <td>${filename}.${format}</td>
+                        <td>${format.toUpperCase()}</td>
+                        <td>${(Math.random() * 3 + 0.5).toFixed(1)} MB</td>
+                        <td>${new Date().toLocaleString()}</td>
+                        <td><button class="btn" style="padding: 5px 15px;" onclick="downloadFile('${filename}.${format}')">Download</button></td>
+                    `;
+                    exportTable.insertBefore(newRow, exportTable.firstChild);
+                    
+                    clearInterval(exportInterval);
+                    
+                    // Simulate download
+                    setTimeout(() => {
+                        alert(`${filename}.${format} is ready for download!`);
+                    }, 500);
+                } else {
+                    updateStatus(`Exporting to ${format.toUpperCase()}...`, progress);
+                }
+            }, 300);
+        }
+
+        function previewExport() {
+            if (scrapedCount === 0) {
+                alert('No data to preview. Please run a scraping job first.');
+                return;
+            }
+
+            const format = document.getElementById('export-format').value;
+            let preview = '';
+
+            switch(format) {
+                case 'csv':
+                    preview = `"Title","URL","Content","Timestamp"
+"Premium Product A","https://example.com/item1","Sample content text","${new Date().toISOString()}"
+"Best Deal B","https://example.com/item2","Sample content text","${new Date().toISOString()}"
+...`;
+                    break;
+                case 'json':
+                    preview = `[
+  {
+    "title": "Premium Product A",
+    "url": "https://example.com/item1",
+    "content": "Sample content text",
+    "timestamp": "${new Date().toISOString()}"
+  },
+  {
+    "title": "Best Deal B",
+    "url": "https://example.com/item2",
+    "content": "Sample content text",
+    "timestamp": "${new Date().toISOString()}"
+  }
+]`;
+                    break;
+                case 'xml':
+                    preview = `<?xml version="1.0" encoding="UTF-8"?>
+<data>
+  <item>
+    <title>Premium Product A</title>
+    <url>https://example.com/item1</url>
+    <content>Sample content text</content>
+    <timestamp>${new Date().toISOString()}</timestamp>
+  </item>
+</data>`;
+                    break;
+                default:
+                    preview = `Preview for ${format.toUpperCase()} format will be generated during export.`;
+            }
+
+            document.getElementById('results').innerHTML = `
+                <h3>Export Preview (${format.toUpperCase()})</h3>
+                <pre style="background: #2d3748; color: #e2e8f0; padding: 20px; border-radius: 8px; overflow-x: auto; font-family: 'Courier New', monospace;">${preview}</pre>
+                <p style="margin-top: 15px; color: #666;">This is a sample preview. Actual export will contain all ${scrapedCount} scraped items.</p>
+            `;
+            
+            switchTab('scraper');
+        }
+
+        function scheduleExport() {
+            alert('Export scheduling feature coming soon! For now, you can use the Schedule tab to set up automated scraping with immediate exports.');
+        }
+
+        function downloadFile(filename) {
+            // Simulate file download
+            const link = document.createElement('a');
+            link.href = '#';
+            link.download = filename;
+            link.click();
+            
+            alert(`Downloading ${filename}...`);
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set default start time to current time + 1 hour
+            const now = new Date();
+            now.setHours(now.getHours() + 1);
+            const timeString = now.toISOString().slice(0, 16);
+            document.getElementById('start-time').value = timeString;
+            
+            // Initialize status
+            updateStatus('Ready', 0);
+            updateScrapedCount(0);
+            
+            // Add some sample data to demonstrate functionality
+            generateSelector();
+        });
+
+        // Advanced features simulation
+        function enableAdvancedMode() {
+            document.body.classList.add('advanced-mode');
+            // Add more advanced controls and options
+        }
+
+        function enableJavaScriptRendering() {
+            alert('JavaScript rendering enabled. This will slow down scraping but capture dynamic content.');
+        }
+
+        function setupDataPipeline() {
+            alert('Data pipeline configuration opened. Connect to databases, APIs, and other data sources.');
+        }
+
+        function openAPIDocumentation() {
+            alert('API Documentation: Use our REST API to integrate Prometheus with your applications.');
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case 'Enter':
+                        e.preventDefault();
+                        if (!isScrapingActive) startScraping();
+                        break;
+                    case 's':
+                        e.preventDefault();
+                        if (isScrapingActive) stopScraping();
+                        break;
+                    case 'p':
+                        e.preventDefault();
+                        previewScrape();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportData();
+                        break;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
